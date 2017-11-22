@@ -7,23 +7,27 @@ use Illuminate\Support\Facades\Config;
 class Translator
 {
 
-    private $_data = array();
-
-    private $_is_load = false;
-
+    // 當下的locale, 用以決定採用哪個語言的翻譯包
     private $_locale;
 
+    // 特定語系的全部tag+key+value
+    // $_data[$locale][$tag][$key] == 翻譯檔的一行(key=value)
+    private $_data = array();
+
+    // 紀錄已使用的翻譯字
     private $_translation = array();
 
+    // 是否透過session保留locale
     private $locale_session_enable = false;
 
+    // 保留locale的session key
     private $locale_session_key = 'multt.translation.locale';
 
     public function __construct()
     {
-        $locale_session_enable = config('translation.locale_session.enable');
-        $locale_session_key = config('translation.locale_session.key');
-        
+        $locale_session_enable = config('multt_translation.locale_session.enable');
+        $locale_session_key = config('multt_translation.locale_session.key');
+
         if ($locale_session_enable == true && $locale_session_key !== null)
             $this->locale_session_enable = true;
         else
@@ -38,7 +42,8 @@ class Translator
     public function setlocale($locale)
     {
         $this->_locale = $locale;
-        
+
+        // 若啟用session, 則儲存於之
         if ($this->locale_session_enable) {
             Session::put($this->locale_session_key, $locale);
         }
@@ -46,8 +51,7 @@ class Translator
 
     public function getlocale()
     {
-        $locale = $this->_locale;
-        return $locale;
+        return $this->_locale;
     }
 
     /**
@@ -58,6 +62,7 @@ class Translator
      */
     public function load($locale)
     {
+        // 若啟用session, 則自session取得. 忽略傳入的locale
         if ($this->locale_session_enable) {
             $session_locale = Session::get($this->locale_session_key, false);
             if ($session_locale !== false) {
@@ -65,30 +70,32 @@ class Translator
             }
         }
         $this->setlocale($locale);
-        
-        if (! $this->_is_load) {
-            // 讀取 lang/$locale/*.csv ($locale=zh_TW, en_US...)
-            $langDir = base_path(config('translation.files')) . DIRECTORY_SEPARATOR . $this->getlocale() . DIRECTORY_SEPARATOR;
-            $handle = opendir($langDir);
-            while (false !== ($file = readdir($handle))) {
-                if (self::endsWith($file, 'csv')) {
-                    
-                    // *.csv檔名必須為xxx_yyy.csv, yyy為locale category, xxx為locale module(目前無用)
-                    $_a = explode('.', $file)[0];
-                    $_b = explode('_', $_a)[1];
-                    $row = 1;
-                    if (($csv_handle = fopen($langDir . $file, "r")) !== FALSE) {
-                        while (($data = fgetcsv($csv_handle, 1000, ",")) !== FALSE) {
-                            $this->_data[$this->getlocale()][$_b][$data[0]] = $data;
-                        }
-                        fclose($csv_handle);
+
+        $_locale = $this->getlocale();
+
+        // 讀取翻譯包 lang/$locale/*.csv ($locale=zh_TW, en_US...)
+        // @TODO 考量做cache
+        $langDir = base_path(config('multt_translation.files')) . DIRECTORY_SEPARATOR . $_locale . DIRECTORY_SEPARATOR;
+        $handle = opendir($langDir);
+        while (false !== ($file = readdir($handle))) {
+            if (self::endsWith($file, 'csv')) {
+
+                // *.csv檔名必須為xxx_yyy.csv, yyy為locale tag, xxx為locale module(目前無用)
+                $_module = explode('.', $file)[0];
+                $_tag = explode('_', $_module)[1];
+
+                $row = 1;
+                if (($csv_handle = fopen($langDir . $file, "r")) !== FALSE) {
+                    while (($word = fgetcsv($csv_handle, 1000, ",")) !== FALSE) {
+                        $_key = $word[0];
+                        $this->_data[$_locale][$_tag][$_key] = $word;
                     }
+                    fclose($csv_handle);
                 }
             }
-            
-            closedir($handle);
-            $this->_is_load = true;
         }
+
+        closedir($handle);
     }
 
     /**
@@ -100,24 +107,23 @@ class Translator
         if (! isset($tag) || $tag == '') {
             return $tag;
         }
-        
+
         if ($locale == null) {
             $locale = $this->getlocale();
         }
-        
+
+        // 值預設為Key
         $value = $key;
-        
-        if (isset($this->_data[$locale]) && isset($this->_data[$locale][$tag]) && isset($this->_data[$locale][$tag][$key]) && $this->_data[$locale][$tag][$key][1]) {
+
+        if (isset($this->_data[$locale][$tag][$key]) && $this->_data[$locale][$tag][$key][1]) {
             $value = $this->_data[$locale][$tag][$key][1];
-        } else {
-            // find all
-            if (isset($this->_data[$locale]) && isset($this->_data[$locale]['all']) && isset($this->_data[$locale]['all'][$key]) && $this->_data[$locale]['all'][$key][1]) {
-                $value = $this->_data[$locale]['all'][$key][1];
-            }
+        } elseif (isset($this->_data[$locale]['all'][$key]) && $this->_data[$locale]['all'][$key][1]) {
+            // 於指定tag找不到時, 找'all' tag內的key
+            $value = $this->_data[$locale]['all'][$key][1];
         }
-        
+
         $this->_translation[$locale][$tag][$key] = $value;
-        
+
         return $value;
     }
 
@@ -133,7 +139,7 @@ class Translator
             echo json_encode($this->_data);
             return;
         }
-        
+
         $rtn = [];
         foreach ($locales as $key => $locale) {
             if (isset($this->_data[$locale])) {
@@ -187,7 +193,7 @@ class Translator
         if ($length == 0) {
             return true;
         }
-        
+
         return (substr($haystack, - $length) === $needle);
     }
 }
