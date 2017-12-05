@@ -45,5 +45,11 @@ class TranslationServiceProvider extends ServiceProvider
 
         $loader = \Illuminate\Foundation\AliasLoader::getInstance();
         $loader->alias('MulttTranslator', \Multt\Translation\Facades\MulttTranslator::class);
+
+        $this->commands([
+        	Console\Commands\CsvToExcel::class,
+        	Console\Commands\PhpToExcel::class,
+    		Console\Commands\ExcelToData::class,
+        ]);
     }
 }
