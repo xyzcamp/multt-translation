@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\File;
 
 class ExcelToData extends Command {
 	protected $signature = 'excelToData {name} {--format=}';
-	protected $description = "All excel's data to specific format.EX: php artisan {name} --format=csv/php";
+	protected $description = "Excel's data to specific format.EX: {name} --format=csv/php";
 
 	public function handle() {
 		$name = $this->argument('name');

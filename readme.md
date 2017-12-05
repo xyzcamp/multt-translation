@@ -58,3 +58,23 @@ return [
 ```php
 @mtrans("home", "Join Xplova Now");
 ```
+
+### 執行 Command: csvToExcel
+* 該 command 會把蒐集放在files路徑下的各國的csv檔案至一份Excel表格中。
+```php
+php artisan csvToExcel
+```
+
+### 執行 Command: phpToExcel
+* 該 command 會把蒐集放在files路徑下的各國的php檔案至一份Excel表格中。
+```php
+php artisan phpToExcel
+```
+
+### 執行 Command: excelToData {name} {--format=}'
+* 該 command 會把files路徑下的Excel匯出指定的檔名和格式至files資料夾。
+* `{name}` : 匯出的檔名、 `{--format=}` : 匯出的格式(目前有csv/php)。
+```php
+php artisan excelToData xyzcamp --format=csv
+```
+* 上例:匯出xyzcamp_XXX.csv 到 files 資料夾下。
