@@ -7,7 +7,7 @@
 
 透過composer require取得此套件.
 ```sh
-$ composer require xyzcamp/multt-translation
+$ composer require multt/translation
 ```
 
 增加TranslationServiceProvider到config/app.php的providers陣列.
@@ -16,7 +16,7 @@ Multt\Translation\TranslationServiceProvider::class,
 ```
 
 ## Configuration
-設定檔為config/multt_transation.php, 複製到你專案的config目錄, 並修改之.
+設定檔為config/multt_translation.php, 複製到你專案的config目錄, 並修改之.
 
 ```php
 return [
