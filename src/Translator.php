@@ -39,11 +39,22 @@ class Translator
      * @param string $locale
      *            en_US, zh_TW ...
      */
-    public function setlocale($locale)
+    public function setlocale($locale, $forceOverride = false)
     {
+        if (! $forceOverride) {
+            // 若啟用session, 則自session取得. 忽略傳入的locale
+            if ($this->locale_session_enable) {
+                $session_locale = Session::get($this->locale_session_key, false);
+                if ($session_locale !== false) {
+                    $this->_locale = $session_locale;
+                    return;
+                }
+            }
+        }
+
         $this->_locale = $locale;
 
-        // 若啟用session, 則儲存於之
+        // 若啟用session, 則儲存之
         if ($this->locale_session_enable) {
             Session::put($this->locale_session_key, $locale);
         }
@@ -60,17 +71,8 @@ class Translator
      * @param string $_locale
      *            en_US, zh_TW ...
      */
-    public function load($locale)
+    public function load()
     {
-        // 若啟用session, 則自session取得. 忽略傳入的locale
-        if ($this->locale_session_enable) {
-            $session_locale = Session::get($this->locale_session_key, false);
-            if ($session_locale !== false) {
-                $locale = $session_locale;
-            }
-        }
-        $this->setlocale($locale);
-
         $_locale = $this->getlocale();
 
         // 讀取翻譯包 lang/$locale/*.csv ($locale=zh_TW, en_US...)
