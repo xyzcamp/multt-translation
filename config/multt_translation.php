@@ -1,6 +1,6 @@
 <?php
 return [
-    
+
     /*
      * |--------------------------------------------------------------------------
      * | Language File Location
@@ -9,6 +9,10 @@ return [
      * |
      */
     'files' => 'packages/multt/translation/resources/lang',
+
+    'parameter' => [
+        'locale' => 'locale'
+    ],
 
     /*
      * |--------------------------------------------------------------------------
