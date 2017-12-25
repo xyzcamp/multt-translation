@@ -14,6 +14,8 @@ class Translator
     // $_data[$locale][$tag][$key] == 翻譯檔的一行(key=value)
     private $_data = array();
 
+    private $_isloaded = false;
+
     // 紀錄已使用的翻譯字
     private $_translation = array();
 
@@ -71,7 +73,7 @@ class Translator
      * @param string $_locale
      *            en_US, zh_TW ...
      */
-    public function load()
+    private function load()
     {
         $_locale = $this->getlocale();
 
@@ -98,21 +100,24 @@ class Translator
         }
 
         closedir($handle);
+        $this->_isloaded = true;
     }
 
     /**
      * 翻譯
      * $translation->translate("home", "Join Xplova Now")
      */
-    function translate($tag = null, $key, $locale = null)
+    public function translate($tag = null, $key)
     {
         if (! isset($tag) || $tag == '') {
             return $tag;
         }
 
-        if ($locale == null) {
-            $locale = $this->getlocale();
-        }
+        $locale = $this->getlocale();
+
+        //@TODO 分別紀錄$locale載入否
+        if (! $this->_isloaded)
+            $this->load();
 
         // 值預設為Key
         $value = $key;
